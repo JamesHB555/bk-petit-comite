@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>BK — Petit Comité</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 40px; width: 360px; }
+    .login-box h1 { font-size: 20px; margin-bottom: 8px; }
+    .login-box p { color: #888; font-size: 14px; margin-bottom: 24px; }
+    .login-box input { width: 100%; padding: 10px 12px; background: #0f0f0f; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 14px; margin-bottom: 12px; }
+    .login-box button { width: 100%; padding: 10px; background: #c9a84c; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer; font-size: 14px; }
+    #login-error { color: #e05555; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* APP */
+    #app-screen { display: none; }
+    header { background: #1a1a1a; border-bottom: 1px solid #333; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    header h1 { font-size: 16px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-right span { color: #888; font-size: 13px; }
+    .btn-logout { background: none; border: 1px solid #444; border-radius: 4px; color: #888; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+    .btn-save-all { background: #c9a84c; border: none; border-radius: 6px; color: #000; font-weight: 600; padding: 8px 18px; cursor: pointer; font-size: 14px; }
+    .btn-save-all:disabled { background: #555; color: #888; cursor: default; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    /* BLOQUES */
+    .bloque { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; margin-bottom: 24px; overflow: hidden; }
+    .bloque-header { padding: 16px 20px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .bloque-header h2 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #c9a84c; }
+    .bloque-header .toggle { color: #555; font-size: 18px; }
+    .bloque-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .bloque-body.collapsed { display: none; }
+
+    /* CAMPO */
+    .campo { display: flex; flex-direction: column; gap: 6px; }
+    .campo label { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .campo textarea { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px; color: #e0e0e0; padding: 12px; font-size: 14px; font-family: inherit; line-height: 1.6; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+    .campo textarea:focus { outline: none; border-color: #c9a84c; }
+    .campo textarea.modified { border-color: #c9a84c55; }
+    .campo-meta { display: flex; gap: 12px; align-items: center; }
+    .campo-meta span { font-size: 11px; color: #555; }
+    .badge-aprobado { background: #1a2a1a; color: #6abf6a; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .badge-borrador { background: #2a2a2a; color: #888; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+
+    /* TOAST */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a1a; border: 1px solid #3a5a3a; color: #6abf6a; padding: 12px 20px; border-radius: 8px; font-size: 14px; display: none; z-index: 100; }
+    #toast.error { background: #2a1a1a; border-color: #5a3a3a; color: #e05555; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Base de Conocimiento</h1>
+    <p>Petit Comité — acceso restringido</p>
+    <input type="text" id="username" placeholder="Usuario" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button onclick="login()">Entrar</button>
+    <div id="login-error">Usuario o contraseña incorrectos.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <h1>Base de Conocimiento — Petit Comité</h1>
+    <div class="header-right">
+      <span id="user-label"></span>
+      <button class="btn-save-all" id="btn-guardar" onclick="guardarCambios()" disabled>Guardar cambios</button>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </header>
+  <div class="container" id="contenido-bk">
+    <p style="color:#555; text-align:center; padding:40px;">Cargando...</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://nxurezlgjkhlzaatccyd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_bZBzQNpPPcpvx1PtR1lXHQ_yUywEH_U';
+  const NEGOCIO = 'Petit Comité';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let documentos = [];
+  let modificados = {};
+
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const hash = await hashPassword(password);
+    const { data, error } = await sb.from('bk_usuarios').select('*').eq('username', username).eq('password_hash', hash).eq('activo', true).single();
+    if (error || !data) {
+      document.getElementById('login-error').style.display = 'block';
+    } else {
+      currentUser = data;
+      sessionStorage.setItem('bk_user', JSON.stringify(data));
+      mostrarApp();
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    sessionStorage.removeItem('bk_user');
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  async function mostrarApp() {
+    document.getElementById('user-label').textContent = currentUser.username;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    await cargarBK();
+  }
+
+  async function cargarBK() {
+    const { data, error } = await sb.from('base_conocimiento').select('*').eq('negocio', NEGOCIO).order('categoria').order('titulo');
+    if (error || !data) return;
+    documentos = data;
+    renderizarBK();
+  }
+
+  function renderizarBK() {
+    const categorias = [...new Set(documentos.map(d => d.categoria))];
+    const container = document.getElementById('contenido-bk');
+    container.innerHTML = categorias.map(cat => {
+      const docs = documentos.filter(d => d.categoria === cat);
+      return `
+        <div class="bloque">
+          <div class="bloque-header" onclick="toggleBloque(this)">
+            <h2>${cat}</h2>
+            <span class="toggle">▾</span>
+          </div>
+          <div class="bloque-body">
+            ${docs.map(doc => `
+              <div class="campo">
+                <label>${doc.titulo}</label>
+                <textarea
+                  id="field-${doc.id}"
+                  rows="${Math.max(4, doc.contenido.split('\n').length + 1)}"
+                  oninput="marcarModificado('${doc.id}', this)"
+                >${doc.contenido}</textarea>
+                <div class="campo-meta">
+                  <span class="badge-${doc.estado}">${doc.estado}</span>
+                  <span>v${doc.version}</span>
+                  <span>Actualizado: ${new Date(doc.fecha_actualizacion).toLocaleDateString('es-MX')}</span>
+                  <span>por ${doc.autor}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleBloque(header) {
+    const body = header.nextElementSibling;
+    const toggle = header.querySelector('.toggle');
+    body.classList.toggle('collapsed');
+    toggle.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+  }
+
+  function marcarModificado(id, textarea) {
+    modificados[id] = textarea.value;
+    textarea.classList.add('modified');
+    document.getElementById('btn-guardar').disabled = Object.keys(modificados).length === 0;
+  }
+
+  async function guardarCambios() {
+    const ids = Object.keys(modificados);
+    let errores = 0;
+    for (const id of ids) {
+      const doc = documentos.find(d => d.id === id);
+      const nuevoHistorial = [...(doc.historial_cambios || []), {
+        autor: currentUser.username,
+        fecha: new Date().toISOString(),
+        accion: 'edicion'
+      }];
+      const { error } = await sb.from('base_conocimiento').update({
+        contenido: modificados[id],
+        autor: currentUser.username,
+        fecha_actualizacion: new Date().toISOString(),
+        version: (doc.version || 1) + 1,
+        historial_cambios: nuevoHistorial
+      }).eq('id', id);
+      if (error) errores++;
+    }
+    modificados = {};
+    document.getElementById('btn-guardar').disabled = true;
+    document.querySelectorAll('textarea.modified').forEach(t => t.classList.remove('modified'));
+    mostrarToast(errores === 0 ? 'Cambios guardados' : `${errores} error(es) al guardar`, errores > 0);
+    await cargarBK();
+  }
+
+  function mostrarToast(msg, esError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = esError ? 'error' : '';
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 3000);
+  }
+
+  // Verificar sesión al cargar
+  const savedUser = sessionStorage.getItem('bk_user');
+  if (savedUser) { currentUser = JSON.parse(savedUser); mostrarApp(); }
+</script>
+</body>
+</html>
