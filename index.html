@@ -85,7 +85,7 @@
     .modal-field input, .modal-field textarea, .modal-field select { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px; color: #e0e0e0; padding: 10px 12px; font-size: 14px; font-family: inherit; width: 100%; }
     .modal-field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
     .modal-field input:focus, .modal-field textarea:focus { outline: none; border-color: #c9a84c; }
-    .modal-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
     .toggle-activo { display: flex; align-items: center; gap: 10px; }
     .toggle-activo label { font-size: 13px; color: #e0e0e0; font-weight: normal; text-transform: none; letter-spacing: 0; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -137,8 +137,12 @@
       </div>
       <div class="modal-field-row">
         <div class="modal-field">
-          <label>Fecha</label>
+          <label>Fecha inicio</label>
           <input type="date" id="ev-fecha" />
+        </div>
+        <div class="modal-field">
+          <label>Fecha fin <span style="color:#555;font-weight:400;">(opcional)</span></label>
+          <input type="date" id="ev-fecha-fin" />
         </div>
         <div class="modal-field">
           <label>Hora</label>
@@ -195,6 +199,12 @@
 <div id="toast"></div>
 
 <script>
+  function formatFecha(inicio, fin) {
+    if (!inicio) return '—';
+    const fmt = (d) => new Date(d + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric',month:'long',year:'numeric'});
+    return fin ? `${fmt(inicio)} al ${fmt(fin)}` : fmt(inicio);
+  }
+
   const SUPABASE_URL = 'https://nxurezlgjkhlzaatccyd.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bZBzQNpPPcpvx1PtR1lXHQ_yUywEH_U';
   const NEGOCIO = 'Petit Comité';
@@ -272,7 +282,7 @@
     grid.innerHTML = lista.map(ev => `
       <div class="evento-card" onclick="abrirModal('${ev.id}')">
         <div class="evento-card-nombre">${ev.nombre}</div>
-        <div class="evento-card-meta">${ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric',month:'long',year:'numeric'}) : '—'} ${ev.hora ? '· ' + ev.hora : ''}</div>
+        <div class="evento-card-meta">${formatFecha(ev.fecha, ev.fecha_fin)} ${ev.hora ? '· ' + ev.hora : ''}</div>
         <div class="evento-card-precio">${ev.precio || '—'}</div>
         <span class="${ev.activo ? 'badge-activo' : 'badge-inactivo'}">${ev.activo ? 'Activo' : 'Inactivo'}</span>
       </div>
@@ -299,6 +309,7 @@
     document.getElementById('modal-titulo').textContent = ev ? 'Editar evento' : 'Nuevo evento';
     document.getElementById('ev-nombre').value = ev ? ev.nombre : '';
     document.getElementById('ev-fecha').value = ev ? (ev.fecha || '') : '';
+    document.getElementById('ev-fecha-fin').value = ev ? (ev.fecha_fin || '') : '';
     document.getElementById('ev-hora').value = ev ? (ev.hora || '') : '';
     document.getElementById('ev-precio').value = ev ? (ev.precio || '') : '';
     document.getElementById('ev-formato').value = ev ? (ev.formato || 'Presencial') : 'Presencial';
@@ -326,6 +337,7 @@
       negocio: NEGOCIO,
       nombre: document.getElementById('ev-nombre').value.trim(),
       fecha: document.getElementById('ev-fecha').value || null,
+      fecha_fin: document.getElementById('ev-fecha-fin').value || null,
       hora: document.getElementById('ev-hora').value.trim(),
       precio: document.getElementById('ev-precio').value.trim(),
       formato: document.getElementById('ev-formato').value,
