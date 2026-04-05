@@ -53,6 +53,55 @@
     /* TOAST */
     #toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a1a; border: 1px solid #3a5a3a; color: #6abf6a; padding: 12px 20px; border-radius: 8px; font-size: 14px; display: none; z-index: 100; }
     #toast.error { background: #2a1a1a; border-color: #5a3a3a; color: #e05555; }
+
+    /* EVENTOS PUBLICOS */
+    .eventos-header-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .eventos-header-left { display: flex; align-items: center; gap: 12px; }
+    .btn-nuevo-evento { background: #c9a84c; border: none; border-radius: 6px; color: #000; font-weight: 600; padding: 6px 14px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    .btn-nuevo-evento:hover { background: #d4b460; }
+
+    .filtro-pills { display: flex; gap: 8px; margin: 16px 20px 0; }
+    .pill { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 20px; color: #888; padding: 4px 14px; cursor: pointer; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; }
+    .pill.active { background: #c9a84c22; border-color: #c9a84c; color: #c9a84c; }
+
+    .carrusel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px 20px 20px; }
+    @media (max-width: 700px) { .carrusel-grid { grid-template-columns: 1fr; } }
+
+    .evento-card { background: #141414; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s; display: flex; flex-direction: column; gap: 8px; }
+    .evento-card:hover { border-color: #c9a84c55; }
+    .evento-card-nombre { font-size: 14px; font-weight: 600; color: #e0e0e0; line-height: 1.3; }
+    .evento-card-meta { font-size: 12px; color: #888; }
+    .evento-card-precio { font-size: 13px; font-weight: 600; color: #c9a84c; }
+    .badge-activo { background: #1a2a1a; color: #6abf6a; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .badge-inactivo { background: #2a2a2a; color: #888; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .eventos-vacio { padding: 32px 20px; text-align: center; color: #555; font-size: 14px; }
+
+    /* MODAL EVENTOS */
+    #modal-evento-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+    #modal-evento-overlay.open { display: flex; }
+    #modal-evento { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; width: 100%; max-width: 600px; padding: 28px; display: flex; flex-direction: column; gap: 18px; position: relative; }
+    #modal-evento h3 { font-size: 15px; font-weight: 700; color: #c9a84c; text-transform: uppercase; letter-spacing: 0.05em; }
+    .modal-campo { display: flex; flex-direction: column; gap: 5px; }
+    .modal-campo label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .modal-campo input, .modal-campo textarea, .modal-campo select {
+      background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px; color: #e0e0e0;
+      padding: 10px 12px; font-size: 13px; font-family: inherit; width: 100%;
+    }
+    .modal-campo input:focus, .modal-campo textarea:focus, .modal-campo select:focus { outline: none; border-color: #c9a84c; }
+    .modal-campo textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .toggle-activo-row { display: flex; align-items: center; gap: 10px; }
+    .toggle-activo-row label { font-size: 13px; color: #e0e0e0; cursor: pointer; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-switch .slider { position: absolute; inset: 0; background: #2a2a2a; border-radius: 22px; cursor: pointer; transition: 0.2s; }
+    .toggle-switch input:checked + .slider { background: #c9a84c; }
+    .toggle-switch .slider:before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+    .toggle-switch input:checked + .slider:before { transform: translateX(18px); }
+    .modal-acciones { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+    .btn-guardar-evento { background: #c9a84c; border: none; border-radius: 6px; color: #000; font-weight: 700; padding: 9px 20px; cursor: pointer; font-size: 14px; }
+    .btn-eliminar-evento { background: #2a1a1a; border: 1px solid #5a3a3a; border-radius: 6px; color: #e05555; padding: 9px 16px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .btn-cerrar-modal { background: none; border: 1px solid #444; border-radius: 6px; color: #888; padding: 9px 14px; cursor: pointer; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -84,12 +133,127 @@
   </div>
 </div>
 
+<!-- MODAL EVENTOS -->
+<div id="modal-evento-overlay" onclick="cerrarModalSiOverlay(event)">
+  <div id="modal-evento">
+    <h3 id="modal-evento-titulo">Nuevo Evento</h3>
+
+    <div class="modal-row">
+      <div class="modal-campo">
+        <label>Nombre del taller</label>
+        <input type="text" id="ev-nombre" placeholder="Ej. Taller de maridaje" />
+      </div>
+      <div class="modal-campo">
+        <label>Precio</label>
+        <input type="text" id="ev-precio" placeholder="Ej. $650 por persona" />
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-campo">
+        <label>Fecha</label>
+        <input type="date" id="ev-fecha" />
+      </div>
+      <div class="modal-campo">
+        <label>Hora</label>
+        <input type="text" id="ev-hora" placeholder="Ej. 7:00 pm" />
+      </div>
+    </div>
+
+    <div class="modal-campo">
+      <label>Formato</label>
+      <select id="ev-formato">
+        <option value="">Seleccionar...</option>
+        <option value="Presencial">Presencial</option>
+        <option value="Online">Online</option>
+        <option value="Hibrido">Híbrido</option>
+      </select>
+    </div>
+
+    <div class="modal-campo">
+      <label>De qué trata</label>
+      <textarea id="ev-contenido" rows="3" placeholder="Descripción del evento..."></textarea>
+    </div>
+
+    <div class="modal-campo">
+      <label>Texto comercial (copy para vender)</label>
+      <textarea id="ev-texto-comercial" rows="3" placeholder="Copy persuasivo..."></textarea>
+    </div>
+
+    <div class="modal-campo">
+      <label>Qué incluye</label>
+      <textarea id="ev-que-incluye" rows="2" placeholder="Ej. Degustación, materiales, certificado..."></textarea>
+    </div>
+
+    <div class="modal-campo">
+      <label>Instrucciones extra</label>
+      <textarea id="ev-instrucciones" rows="2" placeholder="Políticas, requisitos, etc."></textarea>
+    </div>
+
+    <div class="toggle-activo-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="ev-activo" checked />
+        <span class="slider"></span>
+      </label>
+      <label for="ev-activo">Evento activo</label>
+    </div>
+
+    <div class="modal-acciones">
+      <button class="btn-eliminar-evento" id="btn-eliminar-evento" onclick="eliminarEvento()" style="display:none;">Eliminar</button>
+      <button class="btn-cerrar-modal" onclick="cerrarModal()">Cerrar</button>
+      <button class="btn-guardar-evento" onclick="guardarEvento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
+  /*
+  ============================================================
+  SQL PARA CREAR TABLA eventos_publicos EN SUPABASE
+  Ejecutar en: Supabase Dashboard -> SQL Editor
+  ============================================================
+
+  CREATE TABLE eventos_publicos (
+    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    negocio             text NOT NULL DEFAULT 'Petit Comite',
+    nombre              text NOT NULL,
+    fecha               date,
+    hora                text,
+    contenido           text,
+    texto_comercial     text,
+    precio              text,
+    que_incluye         text,
+    formato             text,
+    instrucciones_extra text,
+    activo              boolean NOT NULL DEFAULT true,
+    fecha_creacion      timestamptz NOT NULL DEFAULT now(),
+    fecha_actualizacion timestamptz NOT NULL DEFAULT now()
+  );
+
+  ALTER TABLE eventos_publicos ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "allow_all_authenticated" ON eventos_publicos
+    FOR ALL USING (true) WITH CHECK (true);
+
+  CREATE OR REPLACE FUNCTION set_fecha_actualizacion()
+  RETURNS TRIGGER AS $$
+  BEGIN
+    NEW.fecha_actualizacion = now();
+    RETURN NEW;
+  END;
+  $$ LANGUAGE plpgsql;
+
+  CREATE TRIGGER trg_eventos_actualizacion
+    BEFORE UPDATE ON eventos_publicos
+    FOR EACH ROW EXECUTE FUNCTION set_fecha_actualizacion();
+
+  ============================================================
+  */
+
   const SUPABASE_URL = 'https://nxurezlgjkhlzaatccyd.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bZBzQNpPPcpvx1PtR1lXHQ_yUywEH_U';
-  const NEGOCIO = 'Petit Comité';
+  const NEGOCIO = 'Petit Comite';
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -97,6 +261,11 @@
   let currentUser = null;
   let documentos = [];
   let modificados = {};
+
+  // EVENTOS PUBLICOS
+  let eventos = [];
+  let eventosFiltro = 'todos';
+  let eventoEditandoId = null;
 
   async function hashPassword(password) {
     const encoder = new TextEncoder();
@@ -134,51 +303,219 @@
   }
 
   async function cargarBK() {
-    const { data, error } = await sb.from('base_conocimiento').select('*').eq('negocio', NEGOCIO).order('categoria').order('titulo');
-    if (error || !data) return;
-    documentos = data;
+    const [, resDocs] = await Promise.all([
+      cargarEventos(),
+      sb.from('base_conocimiento').select('*').eq('negocio', NEGOCIO).order('categoria').order('titulo')
+    ]);
+    if (!resDocs.error && resDocs.data) {
+      documentos = resDocs.data;
+    }
     renderizarBK();
+  }
+
+  async function cargarEventos() {
+    const { data, error } = await sb
+      .from('eventos_publicos')
+      .select('*')
+      .eq('negocio', NEGOCIO)
+      .order('fecha', { ascending: true });
+    if (!error && data) eventos = data;
+  }
+
+  function filtrarEventos(estado) {
+    eventosFiltro = estado;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    const pillMap = { todos: 0, activos: 1, inactivos: 2 };
+    const pills = document.querySelectorAll('.pill');
+    if (pills[pillMap[estado]]) pills[pillMap[estado]].classList.add('active');
+    renderCarrusel();
+  }
+
+  function renderCarrusel() {
+    const grid = document.getElementById('carrusel-grid');
+    if (!grid) return;
+    let lista = eventos;
+    if (eventosFiltro === 'activos') lista = eventos.filter(e => e.activo);
+    if (eventosFiltro === 'inactivos') lista = eventos.filter(e => !e.activo);
+
+    if (lista.length === 0) {
+      grid.innerHTML = '<div class="eventos-vacio">Sin eventos para mostrar.</div>';
+      return;
+    }
+
+    grid.innerHTML = lista.map(ev => {
+      const fechaStr = ev.fecha
+        ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+        : 'Sin fecha';
+      const badge = ev.activo
+        ? '<span class="badge-activo">Activo</span>'
+        : '<span class="badge-inactivo">Inactivo</span>';
+      return '<div class="evento-card" onclick="abrirModal(\'' + ev.id + '\')">'
+        + '<div class="evento-card-nombre">' + (ev.nombre || 'Sin nombre') + '</div>'
+        + '<div class="evento-card-meta">' + fechaStr + (ev.hora ? ' &middot; ' + ev.hora : '') + '</div>'
+        + (ev.precio ? '<div class="evento-card-precio">' + ev.precio + '</div>' : '')
+        + '<div>' + badge + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function abrirModal(id) {
+    eventoEditandoId = id || null;
+    const btnEliminar = document.getElementById('btn-eliminar-evento');
+    if (id) {
+      const ev = eventos.find(e => e.id === id);
+      if (!ev) return;
+      document.getElementById('modal-evento-titulo').textContent = 'Editar Evento';
+      document.getElementById('ev-nombre').value = ev.nombre || '';
+      document.getElementById('ev-precio').value = ev.precio || '';
+      document.getElementById('ev-fecha').value = ev.fecha || '';
+      document.getElementById('ev-hora').value = ev.hora || '';
+      document.getElementById('ev-formato').value = ev.formato || '';
+      document.getElementById('ev-contenido').value = ev.contenido || '';
+      document.getElementById('ev-texto-comercial').value = ev.texto_comercial || '';
+      document.getElementById('ev-que-incluye').value = ev.que_incluye || '';
+      document.getElementById('ev-instrucciones').value = ev.instrucciones_extra || '';
+      document.getElementById('ev-activo').checked = !!ev.activo;
+      btnEliminar.style.display = currentUser && currentUser.rol === 'admin' ? 'inline-block' : 'none';
+    } else {
+      document.getElementById('modal-evento-titulo').textContent = 'Nuevo Evento';
+      ['ev-nombre','ev-precio','ev-hora','ev-contenido','ev-texto-comercial','ev-que-incluye','ev-instrucciones'].forEach(function(fid) {
+        document.getElementById(fid).value = '';
+      });
+      document.getElementById('ev-fecha').value = '';
+      document.getElementById('ev-formato').value = '';
+      document.getElementById('ev-activo').checked = true;
+      btnEliminar.style.display = 'none';
+    }
+    document.getElementById('modal-evento-overlay').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal-evento-overlay').classList.remove('open');
+    eventoEditandoId = null;
+  }
+
+  function cerrarModalSiOverlay(e) {
+    if (e.target === document.getElementById('modal-evento-overlay')) cerrarModal();
+  }
+
+  async function guardarEvento() {
+    const nombre = document.getElementById('ev-nombre').value.trim();
+    if (!nombre) { mostrarToast('El nombre del taller es obligatorio.', true); return; }
+
+    const payload = {
+      negocio: NEGOCIO,
+      nombre: nombre,
+      precio: document.getElementById('ev-precio').value.trim(),
+      fecha: document.getElementById('ev-fecha').value || null,
+      hora: document.getElementById('ev-hora').value.trim(),
+      formato: document.getElementById('ev-formato').value,
+      contenido: document.getElementById('ev-contenido').value.trim(),
+      texto_comercial: document.getElementById('ev-texto-comercial').value.trim(),
+      que_incluye: document.getElementById('ev-que-incluye').value.trim(),
+      instrucciones_extra: document.getElementById('ev-instrucciones').value.trim(),
+      activo: document.getElementById('ev-activo').checked
+    };
+
+    let error;
+    if (eventoEditandoId) {
+      payload.fecha_actualizacion = new Date().toISOString();
+      ({ error } = await sb.from('eventos_publicos').update(payload).eq('id', eventoEditandoId));
+    } else {
+      ({ error } = await sb.from('eventos_publicos').insert(payload));
+    }
+
+    if (error) {
+      mostrarToast('Error al guardar evento.', true);
+      console.error(error);
+    } else {
+      mostrarToast(eventoEditandoId ? 'Evento actualizado.' : 'Evento creado.');
+      cerrarModal();
+      await cargarEventos();
+      renderCarrusel();
+    }
+  }
+
+  async function eliminarEvento() {
+    if (!eventoEditandoId) return;
+    if (!currentUser || currentUser.rol !== 'admin') { mostrarToast('Sin permisos para eliminar.', true); return; }
+    if (!confirm('Eliminar este evento? Esta accion no se puede deshacer.')) return;
+    const { error } = await sb.from('eventos_publicos').delete().eq('id', eventoEditandoId);
+    if (error) {
+      mostrarToast('Error al eliminar.', true);
+    } else {
+      mostrarToast('Evento eliminado.');
+      cerrarModal();
+      await cargarEventos();
+      renderCarrusel();
+    }
   }
 
   function renderizarBK() {
     const categorias = [...new Set(documentos.map(d => d.categoria))];
     const container = document.getElementById('contenido-bk');
-    container.innerHTML = categorias.map(cat => {
+
+    const eventosHTML = '<div class="bloque" id="bloque-eventos">'
+      + '<div class="bloque-header" style="cursor:default;" onclick="toggleBloqueEventos(this)">'
+      + '<div class="eventos-header-row">'
+      + '<div class="eventos-header-left">'
+      + '<h2>Eventos Públicos</h2>'
+      + '<span class="toggle" style="cursor:pointer; color:#555; font-size:18px;">&#9662;</span>'
+      + '</div>'
+      + '<button class="btn-nuevo-evento" onclick="event.stopPropagation(); abrirModal(null)">&#xFF0B; Nuevo evento</button>'
+      + '</div>'
+      + '</div>'
+      + '<div class="bloque-body" id="eventos-body" style="padding:0; gap:0;">'
+      + '<div class="filtro-pills">'
+      + '<button class="pill active" onclick="filtrarEventos(\'todos\')">Todos</button>'
+      + '<button class="pill" onclick="filtrarEventos(\'activos\')">Activos</button>'
+      + '<button class="pill" onclick="filtrarEventos(\'inactivos\')">Inactivos</button>'
+      + '</div>'
+      + '<div class="carrusel-grid" id="carrusel-grid"></div>'
+      + '</div>'
+      + '</div>';
+
+    const bkHTML = categorias.map(cat => {
       const docs = documentos.filter(d => d.categoria === cat);
-      return `
-        <div class="bloque">
-          <div class="bloque-header" onclick="toggleBloque(this)">
-            <h2>${cat}</h2>
-            <span class="toggle">▾</span>
-          </div>
-          <div class="bloque-body">
-            ${docs.map(doc => `
-              <div class="campo">
-                <label>${doc.titulo}</label>
-                <textarea
-                  id="field-${doc.id}"
-                  rows="${Math.max(4, doc.contenido.split('\n').length + 1)}"
-                  oninput="marcarModificado('${doc.id}', this)"
-                >${doc.contenido}</textarea>
-                <div class="campo-meta">
-                  <span class="badge-${doc.estado}">${doc.estado}</span>
-                  <span>v${doc.version}</span>
-                  <span>Actualizado: ${new Date(doc.fecha_actualizacion).toLocaleDateString('es-MX')}</span>
-                  <span>por ${doc.autor}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+      return '<div class="bloque">'
+        + '<div class="bloque-header" onclick="toggleBloque(this)">'
+        + '<h2>' + cat + '</h2>'
+        + '<span class="toggle">&#9662;</span>'
+        + '</div>'
+        + '<div class="bloque-body">'
+        + docs.map(doc => {
+            const rows = Math.max(4, doc.contenido.split('\n').length + 1);
+            return '<div class="campo">'
+              + '<label>' + doc.titulo + '</label>'
+              + '<textarea id="field-' + doc.id + '" rows="' + rows + '" oninput="marcarModificado(\'' + doc.id + '\', this)">' + doc.contenido + '</textarea>'
+              + '<div class="campo-meta">'
+              + '<span class="badge-' + doc.estado + '">' + doc.estado + '</span>'
+              + '<span>v' + doc.version + '</span>'
+              + '<span>Actualizado: ' + new Date(doc.fecha_actualizacion).toLocaleDateString('es-MX') + '</span>'
+              + '<span>por ' + doc.autor + '</span>'
+              + '</div>'
+              + '</div>';
+          }).join('')
+        + '</div>'
+        + '</div>';
     }).join('');
+
+    container.innerHTML = eventosHTML + bkHTML;
+    renderCarrusel();
+  }
+
+  function toggleBloqueEventos(header) {
+    const body = document.getElementById('eventos-body');
+    const toggle = header.querySelector('.toggle');
+    body.classList.toggle('collapsed');
+    toggle.innerHTML = body.classList.contains('collapsed') ? '&#9656;' : '&#9662;';
   }
 
   function toggleBloque(header) {
     const body = header.nextElementSibling;
     const toggle = header.querySelector('.toggle');
     body.classList.toggle('collapsed');
-    toggle.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+    toggle.innerHTML = body.classList.contains('collapsed') ? '&#9656;' : '&#9662;';
   }
 
   function marcarModificado(id, textarea) {
@@ -209,19 +546,20 @@
     modificados = {};
     document.getElementById('btn-guardar').disabled = true;
     document.querySelectorAll('textarea.modified').forEach(t => t.classList.remove('modified'));
-    mostrarToast(errores === 0 ? 'Cambios guardados' : `${errores} error(es) al guardar`, errores > 0);
+    mostrarToast(errores === 0 ? 'Cambios guardados' : errores + ' error(es) al guardar', errores > 0);
     await cargarBK();
   }
 
-  function mostrarToast(msg, esError = false) {
+  function mostrarToast(msg, esError) {
+    esError = esError || false;
     const toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.className = esError ? 'error' : '';
     toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 3000);
+    setTimeout(function() { toast.style.display = 'none'; }, 3000);
   }
 
-  // Verificar sesión al cargar
+  // Verificar sesion al cargar
   const savedUser = sessionStorage.getItem('bk_user');
   if (savedUser) { currentUser = JSON.parse(savedUser); mostrarApp(); }
 </script>
